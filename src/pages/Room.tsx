@@ -95,11 +95,16 @@ export default function Room() {
   const formatTime = (ts: number) => {
     const d = new Date(ts);
     return new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
       hour12: false
-    }).format(d);
+    })
+      .format(d)
+      .replace(/\//g, '-');
   };
 
   return (
@@ -173,7 +178,9 @@ export default function Room() {
             <p className="text-sm">暂无同步记录，在左侧输入并发送吧</p>
           </div>
         ) : (
-          messages.map((msg) => (
+          [...messages]
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .map((msg) => (
             <div 
               key={msg.id}
               className="group bg-white dark:bg-[#2C2C2E] rounded-2xl p-5 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_2px_10px_rgb(0,0,0,0.1)] transition-all"
