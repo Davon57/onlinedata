@@ -20,7 +20,7 @@ export default function Room() {
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
-  const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Connect to the same origin, which will be proxied by Vite in dev and served by Express in prod
@@ -41,12 +41,12 @@ export default function Room() {
 
     newSocket.on('history', (history: Message[]) => {
       setMessages(history);
-      scrollToBottom();
+      scrollToTop();
     });
 
     newSocket.on('new_message', (message: Message) => {
       setMessages((prev) => [...prev, message]);
-      scrollToBottom();
+      scrollToTop();
     });
 
     newSocket.on('room_user_count', (count: number) => {
@@ -58,9 +58,9 @@ export default function Room() {
     };
   }, [id]);
 
-  const scrollToBottom = () => {
+  const scrollToTop = () => {
     setTimeout(() => {
-      endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
+      messageListRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
   };
 
@@ -169,7 +169,7 @@ export default function Room() {
       </div>
 
       {/* Main area for history */}
-      <div className="flex-1 h-[calc(100vh-320px)] md:h-screen overflow-y-auto p-4 md:p-8 space-y-4">
+      <div ref={messageListRef} className="flex-1 h-[calc(100vh-320px)] md:h-screen overflow-y-auto p-4 md:p-8 space-y-4">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-4">
             <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-[#2C2C2E] flex items-center justify-center">
@@ -217,7 +217,6 @@ export default function Room() {
             </div>
           ))
         )}
-        <div ref={endOfMessagesRef} />
       </div>
     </div>
   );
