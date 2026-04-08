@@ -1,15 +1,5 @@
 # onlinedata
 
-## 预览
-
-### 首页
-
-![首页预览](./public/preview-home.svg)
-
-### 房间页
-
-![房间页预览](./public/preview-room.svg)
-
 跨设备在线数据同步工具，支持通过房间口令在多端之间实时同步文本、JSON 和接口参数内容。
 
 ## 功能特性
@@ -108,6 +98,16 @@ pnpm check      # TypeScript 类型检查
 
 - 服务端消息历史使用内存存储，重启后会清空
 - `auth` 路由目前为占位实现，未接入真实鉴权
+
+## 预览
+
+### 首页
+
+![首页预览](./public/preview-home.svg)
+
+### 房间页
+
+![房间页预览](./public/preview-room.svg)
 
 ## License
 
