@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
-import { ChevronLeft, Send, Copy, Check, Clock } from 'lucide-react';
+import { ChevronLeft, Send, Copy, Check, Clock, Users, Trash2 } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -15,6 +15,7 @@ export default function Room() {
   const navigate = useNavigate();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
+  const [roomUserCount, setRoomUserCount] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -48,6 +49,10 @@ export default function Room() {
       scrollToBottom();
     });
 
+    newSocket.on('room_user_count', (count: number) => {
+      setRoomUserCount(count);
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -70,6 +75,13 @@ export default function Room() {
     setInput('');
   };
 
+  const handleClearRoom = () => {
+    if (!socket || !id) return;
+    const confirmed = window.confirm('确认清空当前房间的同步记录吗？');
+    if (!confirmed) return;
+    socket.emit('clear_room', id);
+  };
+
   const handleCopy = async (id: string, content: string) => {
     try {
       await navigator.clipboard.writeText(content);
@@ -86,7 +98,6 @@ export default function Room() {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      fractionalSecondDigits: 3,
       hour12: false
     }).format(d);
   };
@@ -105,7 +116,12 @@ export default function Room() {
             </button>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-gray-900 dark:text-white">房间: {id}</span>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" />
+                  {roomUserCount} 人在线
+                </span>
+                <span className="inline-flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
                   {connected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
                   <span className={`relative inline-flex rounded-full h-2 w-2 ${connected ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
@@ -113,9 +129,18 @@ export default function Room() {
                 <span className="text-[11px] text-gray-500 dark:text-gray-400">
                   {connected ? '已连接' : '未连接'}
                 </span>
+                </span>
               </div>
             </div>
           </div>
+          <button
+            onClick={handleClearRoom}
+            disabled={!connected}
+            className="h-9 px-3 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:text-gray-400 text-[13px] font-medium flex items-center gap-1.5 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            清空记录
+          </button>
         </div>
 
         <div className="p-4 flex-1 flex flex-col">

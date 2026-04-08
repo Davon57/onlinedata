@@ -19,15 +19,32 @@ export function setupSocket(server: HTTPServer) {
     }
   });
 
+  const emitRoomUserCount = (roomId: string) => {
+    const count = io.sockets.adapter.rooms.get(roomId)?.size ?? 0;
+    io.to(roomId).emit('room_user_count', count);
+  };
+
   io.on('connection', (socket: Socket) => {
     console.log('Client connected:', socket.id);
 
     socket.on('join_room', (roomId: string) => {
+      if (!roomId) {
+        return;
+      }
+
+      const previousRoomId = socket.data.roomId as string | undefined;
+      if (previousRoomId && previousRoomId !== roomId) {
+        socket.leave(previousRoomId);
+        emitRoomUserCount(previousRoomId);
+      }
+
       socket.join(roomId);
+      socket.data.roomId = roomId;
       console.log(`Socket ${socket.id} joined room ${roomId}`);
       
       const history = rooms.get(roomId) || [];
       socket.emit('history', history);
+      emitRoomUserCount(roomId);
     });
 
     socket.on('new_message', (data: { roomId: string; content: string }) => {
@@ -55,8 +72,21 @@ export function setupSocket(server: HTTPServer) {
       io.to(roomId).emit('new_message', message);
     });
 
+    socket.on('clear_room', (roomId: string) => {
+      if (!roomId) {
+        return;
+      }
+
+      rooms.set(roomId, []);
+      io.to(roomId).emit('history', []);
+    });
+
     socket.on('disconnect', () => {
+      const roomId = socket.data.roomId as string | undefined;
       console.log('Client disconnected:', socket.id);
+      if (roomId) {
+        emitRoomUserCount(roomId);
+      }
     });
   });
 }
